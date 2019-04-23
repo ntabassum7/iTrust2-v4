@@ -43,7 +43,7 @@ public class DBUtil {
             // Set some default values and maybe we'll get lucky
             url = "jdbc:mysql://localhost:3306/iTrust2?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=EST";
             username = "root";
-            password = "";
+            password = "root";
         }
         finally {
             if ( null != input ) {
