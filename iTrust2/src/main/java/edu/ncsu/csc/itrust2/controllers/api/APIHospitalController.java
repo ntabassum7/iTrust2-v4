@@ -18,6 +18,8 @@ import edu.ncsu.csc.itrust2.models.enums.TransactionType;
 import edu.ncsu.csc.itrust2.models.persistent.Hospital;
 import edu.ncsu.csc.itrust2.utils.LoggerUtil;
 
+import redis.clients.jedis.Jedis;
+
 /**
  * Class that provides REST API endpoints for the Hospital model. In all
  * requests made to this controller, the {id} provided is a String that is the
@@ -68,13 +70,20 @@ public class APIHospitalController extends APIController {
     @PostMapping ( BASE_PATH + "/hospitals" )
     @PreAuthorize ( "hasRole('ROLE_ADMIN') ")
     public ResponseEntity createHospital ( @RequestBody final HospitalForm hospitalF ) {
-        final Hospital hospital = new Hospital( hospitalF );
+
+        // @Jchakra changing for featureFlag
+        // Connecting to Redis server on localhost
+		Jedis jedis = new Jedis("localhost");		
+
+		String featureflag = jedis.get("test");
+		if (featureflag.equals("true")){
+
+            final Hospital hospital = new Hospital( hospitalF );
         if ( null != Hospital.getByName( hospital.getName() ) ) {
             return new ResponseEntity(
                     errorResponse( "Hospital with the name " + hospital.getName() + " already exists" ),
                     HttpStatus.CONFLICT );
-        }
-        try {
+        }try {
             hospital.save();
             LoggerUtil.log( TransactionType.CREATE_HOSPITAL, LoggerUtil.currentUser() );
             return new ResponseEntity( hospital, HttpStatus.OK );
@@ -83,6 +92,14 @@ public class APIHospitalController extends APIController {
             return new ResponseEntity( errorResponse( "Error occured while validating or saving " + hospital.toString()
                     + " because of " + e.getMessage() ), HttpStatus.BAD_REQUEST );
         }
+        
+
+
+        }else{
+
+            return new ResponseEntity(errorResponse( "You do not have permission "), HttpStatus.BAD_REQUEST);
+        }
+        
 
     }
 
